@@ -36,6 +36,9 @@ update-depot: # Update everything using Depot
 	depot bake -f docker-compose.yml -f docker-compose.override.yml --load
 	$(MAKE) post-update
 
+build-prod: # Build production Docker image locally (fully containerized, same as CI)
+	bash util/build-prod.sh
+
 test:
 	docker compose exec --user=azuracast web composer run cleanup-and-test
 
