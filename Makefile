@@ -39,6 +39,19 @@ update-depot: # Update everything using Depot
 build-prod: # Build production Docker image locally (fully containerized, same as CI)
 	bash util/build-prod.sh
 
+TEST_IMAGE ?= azuracast-dev-test
+
+test-image: # Build development image used for local CI-like tests
+	docker buildx build --platform linux/amd64 --target development -t $(TEST_IMAGE) --load .
+
+test-php: # Run PHP test suite checks (parallel-lint, phpstan, phpcs) in container
+	docker run --rm --platform linux/amd64 --entrypoint "" -e APPLICATION_ENV=testing $(TEST_IMAGE) bash -lc "cd /var/azuracast/www && vendor/bin/parallel-lint . --exclude vendor && vendor/bin/phpstan analyze --memory-limit=-1 && vendor/bin/phpcs"
+
+test-node: # Run Node/TypeScript/lint checks in container
+	docker run --rm --platform linux/amd64 --entrypoint "" $(TEST_IMAGE) bash -lc "cd /var/azuracast/www && npm run tsc && npm run lint"
+
+test-ci: test-image test-php test-node # Run local CI-equivalent test checks
+
 test:
 	docker compose exec --user=azuracast web composer run cleanup-and-test
 
