@@ -12,7 +12,7 @@
         <div class="card-body">
             <p class="text-muted mb-3">
                 {{ $gettext('Define the sequence of playlists to play from. Each step will play the specified number of songs before advancing to the next step. The sequence repeats from the beginning after the last step.') }}
-                {{ $gettext('Only playlists in "General Rotation" mode can be added as steps.') }}
+                {{ $gettext('General Rotation playlists can be added as steps.') }}
             </p>
 
             <div class="form-check mb-3">
@@ -221,6 +221,7 @@ interface ChildItem {
 interface PlaylistOption {
     id: number;
     name: string;
+    type: string;
     order: string;
     is_jingle: boolean;
     num_songs: number;
@@ -279,15 +280,26 @@ const totalUniqueSongs = computed(() => {
     return total;
 });
 
+const currentPlaylistId = computed((): number | null => {
+    if (!props.editUrl) return null;
+    const parts = props.editUrl.split('/');
+    const id = parseInt(parts[parts.length - 1], 10);
+    return isNaN(id) ? null : id;
+});
+
 const loadPlaylists = async () => {
     try {
         const listUrl = getStationApiUrl('/playlists');
         const {data} = await axios.get(listUrl.value);
         availablePlaylists.value = data
-            .filter((pl: any) => pl.type === 'default')
+            .filter((pl: any) =>
+                pl.type === 'default'
+                && pl.id !== currentPlaylistId.value
+            )
             .map((pl: any) => ({
                 id: pl.id,
                 name: pl.name,
+                type: pl.type,
                 order: pl.order,
                 is_jingle: pl.is_jingle,
                 num_songs: pl.num_songs
