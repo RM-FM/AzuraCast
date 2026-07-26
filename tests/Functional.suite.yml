@@ -8,3 +8,4 @@ modules:
     - REST:
         depends: \App\Tests\Module
     - Cli
+    - Asserts
